@@ -844,7 +844,7 @@
     <h1>Olá, <span id="nome"></span>! 👋</h1>
     <p class="intro">Confira abaixo sua evolução de consumo.</p>
 
-    <section class="dashboard-grid" aria-label="Dashboard de médias">
+    <section id="dashboardMedias" class="dashboard-grid" aria-label="Dashboard de médias">
       <article class="chart-card">
         <div class="card-title">
           <h2>Evolução das médias</h2>
@@ -915,6 +915,11 @@
     }
 
     function atualizarStatusBase() {
+      if (location.protocol !== "file:") {
+        document.getElementById("baseStatus").textContent =
+          "✓ Sistema conectado e pronto para consulta.";
+        return;
+      }
       document.getElementById("baseStatus").textContent = registros.length
         ? "✓ Planilha importada e pronta para consulta."
         : "Importe a planilha no acesso administrativo.";
@@ -930,25 +935,62 @@
 
     async function consultar(event) {
       event.preventDefault();
-      const senhaHash = await hash(`portal-funcionario:${senha.value}`);
-      const registro = registros.find(item =>
-        item.matricula === matricula.value.trim() && item.senhaHash === senhaHash
-      );
+      const erro = document.getElementById("erro");
+      erro.style.display = "none";
+      let registro;
+
+      if (location.protocol === "file:") {
+        const senhaHash = await hash(`portal-funcionario:${senha.value}`);
+        registro = registros.find(item =>
+          item.matricula === matricula.value.trim() && item.senhaHash === senhaHash
+        );
+      } else {
+        try {
+          const resposta = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              matricula: matricula.value.trim(),
+              senha: senha.value
+            })
+          });
+          const dados = await resposta.json();
+          if (resposta.ok && dados.ok) registro = dados.resultado;
+        } catch {
+          erro.textContent = "Não foi possível conectar ao sistema. Tente novamente.";
+          erro.style.display = "block";
+          return;
+        }
+      }
+
       if (!registro) {
-        document.getElementById("erro").style.display = "block";
+        erro.textContent = "Matrícula ou senha inválida.";
+        erro.style.display = "block";
         return;
       }
+
+      exibirResultado(registro);
+    }
+
+    function exibirResultado(registro) {
+      const historico = Array.isArray(registro.historico) ? registro.historico : [];
       document.getElementById("nome").textContent = registro.nome;
-      document.getElementById("mensagem").textContent = registro.mensagem;
-      document.getElementById("periodoAtual").textContent =
-        registro.historico[registro.historico.length - 1].mes;
-      document.getElementById("quantidadeRegistros").textContent = registro.historico.length;
-      document.getElementById("mediaAtual").textContent =
-        registro.historico[registro.historico.length - 1].valor.toLocaleString("pt-BR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      montarGrafico(registro.historico);
+      document.getElementById("mensagem").textContent =
+        registro.mensagem || `${registro.nome}, seu acesso foi confirmado com segurança.`;
+
+      const dashboard = document.getElementById("dashboardMedias");
+      dashboard.hidden = historico.length === 0;
+      if (historico.length) {
+        const atual = historico[historico.length - 1];
+        document.getElementById("periodoAtual").textContent = atual.mes;
+        document.getElementById("quantidadeRegistros").textContent = historico.length;
+        document.getElementById("mediaAtual").textContent =
+          atual.valor.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+        montarGrafico(historico);
+      }
       document.getElementById("consulta").hidden = true;
       document.getElementById("resultado").hidden = false;
       window.scrollTo({ top: 0, behavior: "smooth" });

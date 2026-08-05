@@ -1,4 +1,8 @@
 {
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "csv-parse": "^7.0.2",
