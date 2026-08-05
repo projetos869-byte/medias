@@ -1,0 +1,19 @@
+# Credenciais e dados privados
+.env
+.env.*
+*.csv
+*.xlsm
+*.xlsx
+*.db
+
+# Dependências e arquivos gerados
+node_modules/
+dist/
+*.log
+*.tar.gz
+
+# Projeto interno com repositório próprio
+portal_medias/
+
+# Arquivos auxiliares locais
+importar-csv.mjs

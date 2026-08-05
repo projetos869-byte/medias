@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal de médias — Visualização</title>
+  <style>
+    :root {
+      --ink: #12241f;
+      --muted: #63736d;
+      --green: #12745a;
+      --green-dark: #0b5843;
+      --line: #dce6e1;
+      --paper: #fbfcfb;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 5%, rgba(201,235,220,.5), transparent 28rem),
+        radial-gradient(circle at 90% 95%, rgba(218,235,228,.45), transparent 30rem),
+        var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    button, input { font: inherit; }
+    .topbar {
+      width: min(1180px, calc(100% - 48px));
+      height: 78px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(18,36,31,.08);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border: 0;
+      padding: 0;
+      color: var(--ink);
+      background: transparent;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: white;
+      background: var(--green);
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 850;
+      box-shadow: 0 6px 16px rgba(18,116,90,.18);
+    }
+    .secure {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .secure i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2aa879;
+      box-shadow: 0 0 0 4px rgba(42,168,121,.12);
+    }
+    .shell {
+      width: min(720px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 62px 0 72px;
+      text-align: center;
+    }
+    #resultado {
+      width: min(1040px, calc(100% - 48px));
+    }
+    #admin {
+      width: min(780px, calc(100% - 40px));
+    }
+    .portal-tabs {
+      display: inline-flex;
+      gap: 4px;
+      margin-bottom: 30px;
+      padding: 4px;
+      background: #e9f1ed;
+      border-radius: 13px;
+    }
+    .portal-tabs button {
+      padding: 9px 16px;
+      color: var(--muted);
+      background: transparent;
+      border: 0;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .portal-tabs button.active {
+      color: var(--green-dark);
+      background: white;
+      box-shadow: 0 3px 12px rgba(22,61,48,.1);
+    }
+    .lookup-art {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      margin: 0 auto 28px;
+      border-radius: 32px;
+      background: linear-gradient(145deg, #dff2e9, #edf7f2);
+      box-shadow: inset 0 0 0 1px rgba(18,116,90,.08);
+    }
+    .bar {
+      position: absolute;
+      bottom: 28px;
+      width: 12px;
+      border-radius: 8px 8px 3px 3px;
+      background: var(--green);
+    }
+    .bar.one { left: 26px; height: 25px; opacity: .45; }
+    .bar.two { left: 46px; height: 38px; opacity: .7; }
+    .bar.three { left: 66px; height: 54px; }
+    .trend {
+      position: absolute;
+      top: 20px;
+      right: 18px;
+      color: var(--green-dark);
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .eyebrow {
+      display: inline-block;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 12px 0;
+      font-size: clamp(34px, 6vw, 52px);
+      line-height: 1.04;
+      letter-spacing: -.045em;
+    }
+    .intro {
+      max-width: 520px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .form-card, .message-card {
+      margin-top: 38px;
+      padding: 22px;
+      text-align: left;
+      background: rgba(255,255,255,.9);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 18px 50px rgba(24,58,47,.08);
+    }
+    .form-card {
+      max-width: 720px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+    label {
+      display: block;
+      margin-bottom: 9px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 9px;
+      align-items: stretch;
+    }
+    input {
+      width: 100%;
+      min-width: 0;
+      padding: 14px 15px;
+      color: var(--ink);
+      background: #f8faf9;
+      border: 1px solid #ccd9d3;
+      border-radius: 12px;
+      outline: none;
+      text-align: center;
+      letter-spacing: .38em;
+      font-size: 20px;
+      font-weight: 800;
+    }
+    input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 4px rgba(18,116,90,.1);
+    }
+    .primary {
+      padding: 0 22px;
+      min-height: 50px;
+      color: white;
+      background: var(--green);
+      border: 0;
+      border-radius: 12px;
+      font-weight: 750;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .primary:hover { background: var(--green-dark); }
+    .error {
+      display: none;
+      margin: 11px 2px 0;
+      color: #a43b35;
+      font-size: 13px;
+    }
+    .privacy, .demo {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .demo {
+      padding: 12px;
+      background: #eef6f2;
+      border-radius: 10px;
+    }
+    .hero-title {
+      margin: 18px 0 14px;
+      color: var(--green-dark);
+      font-size: clamp(30px, 5vw, 44px);
+      font-weight: 900;
+      letter-spacing: -.025em;
+      text-transform: uppercase;
+    }
+    .access-card {
+      padding: 30px;
+      border-color: #d2e4dc;
+      box-shadow: 0 22px 55px rgba(24,58,47,.12);
+    }
+    .access-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 25px;
+      color: var(--green-dark);
+    }
+    .access-heading-icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      background: #e2f3eb;
+      border-radius: 50%;
+      font-size: 21px;
+    }
+    .access-heading h2 {
+      margin: 0;
+      font-size: 19px;
+      text-transform: uppercase;
+    }
+    .access-fields {
+      display: grid;
+      gap: 20px;
+    }
+    .field-group label {
+      margin: 0 0 -9px 18px;
+      position: relative;
+      z-index: 1;
+      width: max-content;
+      padding: 0 8px;
+      color: var(--ink);
+      background: white;
+      font-size: 13px;
+    }
+    .input-shell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 68px;
+      padding: 0 18px;
+      border: 1.5px solid #7ebc9f;
+      border-radius: 15px;
+    }
+    .input-shell:focus-within {
+      border-color: var(--green);
+      box-shadow: 0 0 0 4px rgba(18,116,90,.09);
+    }
+    .field-icon {
+      color: var(--green);
+      font-size: 22px;
+    }
+    .access-card .input-shell input {
+      min-height: auto;
+      padding: 0;
+      text-align: left;
+      letter-spacing: 0;
+      color: var(--ink);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      font-size: 17px;
+      font-weight: 500;
+    }
+    .access-submit {
+      width: 100%;
+      min-height: 62px;
+      margin-top: 24px;
+      background: linear-gradient(135deg, #14825f, #086149);
+      box-shadow: 0 10px 24px rgba(11,88,67,.2);
+      font-size: 16px;
+      text-transform: uppercase;
+    }
+    .base-status {
+      margin-top: 18px;
+      padding: 14px 16px;
+      color: var(--green-dark);
+      background: #eef8f4;
+      border: 1px solid #b9daca;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .privacy-callout {
+      margin-top: 28px;
+      padding: 16px 20px;
+      color: var(--ink);
+      background: rgba(242,249,246,.8);
+      border: 1px solid #a9d4c0;
+      border-radius: 14px;
+      font-size: 14px;
+    }
+    .privacy-callout strong {
+      color: var(--green-dark);
+    }
+    .secure-footer {
+      margin-top: 28px;
+      padding: 22px;
+      color: white;
+      background: linear-gradient(135deg, #0b7354, #07513e);
+      border-radius: 22px;
+      font-size: 13px;
+      line-height: 1.5;
+      box-shadow: 0 18px 40px rgba(11,88,67,.18);
+    }
+    .secure-footer strong,
+    .secure-footer span {
+      display: block;
+    }
+    .secure-footer span {
+      color: #bfe9d8;
+    }
+    .message-card {
+      overflow: hidden;
+      padding: 0;
+      border-radius: 26px;
+      box-shadow: 0 24px 70px rgba(17,54,42,.1);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(250px, .5fr);
+      gap: 18px;
+      margin-top: 28px;
+      text-align: left;
+    }
+    .chart-card, .summary-card {
+      padding: 24px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(24,58,47,.07);
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .card-title h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .card-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chart {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      height: 260px;
+      padding: 28px 8px 30px;
+      border-bottom: 1px solid #cbd8d2;
+      background:
+        linear-gradient(to bottom,
+          transparent 24%, rgba(18,36,31,.06) 25%, transparent 26%,
+          transparent 49%, rgba(18,36,31,.06) 50%, transparent 51%,
+          transparent 74%, rgba(18,36,31,.06) 75%, transparent 76%);
+    }
+    .chart-column {
+      position: relative;
+      display: flex;
+      flex: 1;
+      align-items: flex-end;
+      justify-content: center;
+      height: 100%;
+    }
+    .chart-bar {
+      position: relative;
+      width: min(56px, 70%);
+      min-height: 10px;
+      background: linear-gradient(180deg, #bdd8cc, #91b9a8);
+      border-radius: 10px 10px 3px 3px;
+      transition: height .45s ease;
+    }
+    .chart-bar.current {
+      background: linear-gradient(180deg, #25936f, var(--green-dark));
+      box-shadow: 0 8px 20px rgba(11,88,67,.2);
+    }
+    .chart-value {
+      position: absolute;
+      top: -23px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--green-dark);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .chart-month {
+      position: absolute;
+      bottom: -24px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .legend-color {
+      flex: 0 0 auto;
+      width: 13px;
+      height: 13px;
+      border-radius: 4px;
+      background: var(--green);
+    }
+    .summary-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .summary-score {
+      margin: 7px 0 22px;
+      color: var(--green-dark);
+      font-size: 52px;
+      font-weight: 850;
+      letter-spacing: -.055em;
+    }
+    .summary-score small {
+      margin-left: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+    .summary-data {
+      display: grid;
+      gap: 12px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 13px;
+    }
+    .summary-row span { color: var(--muted); }
+    .message-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 26px;
+      color: white;
+      background: var(--green-dark);
+    }
+    .check {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      color: var(--green-dark);
+      background: #bce8d6;
+      border-radius: 11px;
+      font-weight: 900;
+    }
+    .message-head span, .message-head strong { display: block; }
+    .message-head span { margin-bottom: 3px; opacity: .72; font-size: 12px; }
+    .message-text {
+      margin: 0;
+      padding: 30px;
+      font-size: 17px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+    .secondary {
+      margin-top: 22px;
+      padding: 12px 18px;
+      color: var(--green-dark);
+      background: transparent;
+      border: 1px solid #b9cbc3;
+      border-radius: 11px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .drop-zone {
+      margin-top: 30px;
+      padding: 42px 24px;
+      background: rgba(255,255,255,.85);
+      border: 2px dashed #b8cbc2;
+      border-radius: 22px;
+      transition: .2s ease;
+    }
+    .drop-zone.dragging {
+      background: #e5f3ed;
+      border-color: var(--green);
+    }
+    .upload-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 15px;
+      color: white;
+      background: var(--green);
+      border-radius: 15px;
+      font-size: 25px;
+      font-weight: 900;
+    }
+    .drop-zone p { color: var(--muted); font-size: 13px; }
+    .file-label {
+      display: inline-block;
+      margin: 8px 0 0;
+      padding: 11px 15px;
+      color: var(--green-dark);
+      background: #edf6f2;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .file-label input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+    [hidden] { display: none !important; }
+    @media (max-width: 900px) {
+      #resultado {
+        width: min(720px, calc(100% - 36px));
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .summary-card {
+        order: -1;
+      }
+      .summary-data {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        width: calc(100% - 28px);
+        height: 64px;
+      }
+      .brand { font-size: 14px; }
+      .brand-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+      }
+      .secure { display: none; }
+      .shell,
+      #resultado,
+      #admin {
+        width: min(100% - 24px, 520px);
+        padding: 32px 0 48px;
+      }
+      .portal-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        margin-bottom: 26px;
+      }
+      .portal-tabs button {
+        min-height: 42px;
+      }
+      .lookup-art {
+        width: 88px;
+        height: 88px;
+        margin-bottom: 22px;
+        border-radius: 25px;
+        transform: scale(.9);
+      }
+      h1 {
+        font-size: clamp(30px, 10vw, 40px);
+        line-height: 1.08;
+      }
+      .intro {
+        font-size: 15px;
+        line-height: 1.55;
+      }
+      .form-card {
+        margin-top: 28px;
+        padding: 16px;
+        border-radius: 17px;
+      }
+      .access-card {
+        padding: 18px 14px;
+      }
+      .access-heading {
+        margin-bottom: 22px;
+      }
+      .access-heading-icon {
+        width: 40px;
+        height: 40px;
+      }
+      .access-heading h2 {
+        font-size: 16px;
+      }
+      .input-shell {
+        min-height: 60px;
+        padding: 0 14px;
+      }
+      .access-card .input-shell input {
+        min-height: auto;
+        font-size: 16px;
+      }
+      .access-submit {
+        min-height: 56px;
+      }
+      .privacy-callout,
+      .secure-footer {
+        margin-top: 18px;
+        border-radius: 16px;
+      }
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+      input,
+      .primary {
+        min-height: 52px;
+      }
+      .primary {
+        width: 100%;
+        padding: 0 18px;
+      }
+      .dashboard-grid {
+        gap: 12px;
+        margin-top: 22px;
+      }
+      .chart-card,
+      .summary-card {
+        padding: 17px;
+        border-radius: 18px;
+      }
+      .summary-score {
+        font-size: 46px;
+      }
+      .summary-data {
+        grid-template-columns: 1fr;
+      }
+      .chart {
+        height: 210px;
+        gap: 7px;
+        padding-right: 2px;
+        padding-left: 2px;
+      }
+      .chart-bar {
+        width: min(44px, 76%);
+      }
+      .chart-value {
+        font-size: 10px;
+      }
+      .chart-month {
+        font-size: 11px;
+      }
+      .message-card {
+        margin-top: 14px;
+        border-radius: 18px;
+      }
+      .message-head {
+        padding: 18px;
+      }
+      .message-text {
+        padding: 21px 18px;
+        font-size: 15px;
+        line-height: 1.65;
+      }
+      .drop-zone {
+        margin-top: 26px;
+        padding: 30px 16px;
+        border-radius: 18px;
+      }
+      .secondary {
+        width: 100%;
+        min-height: 48px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .shell,
+      #resultado,
+      #admin {
+        width: calc(100% - 18px);
+      }
+      .portal-tabs button {
+        padding-right: 8px;
+        padding-left: 8px;
+        font-size: 12px;
+      }
+      .chart {
+        gap: 4px;
+      }
+      .chart-value {
+        font-size: 9px;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" type="button" onclick="voltar()">
+      <span class="brand-mark">M</span>
+      <span>Portal de médias</span>
+    </button>
+    <span class="secure"><i></i> Acesso individual</span>
+  </header>
+
+  <main id="consulta" class="shell">
+    <div class="portal-tabs">
+      <button id="tabFuncionario" class="active" type="button" onclick="mostrarFuncionario()">Funcionário</button>
+      <button id="tabAdmin" type="button" onclick="mostrarAdmin()">Administrador</button>
+    </div>
+    <div class="lookup-art" aria-hidden="true">
+      <span class="bar one"></span>
+      <span class="bar two"></span>
+      <span class="bar three"></span>
+      <span class="trend">↗</span>
+    </div>
+    <h1 class="hero-title">Consulta de resultado</h1>
+    <p class="intro">Digite sua matrícula e a senha alfanumérica de 5 caracteres recebida para visualizar seu resultado individual.</p>
+
+    <form class="form-card access-card" onsubmit="consultar(event)">
+      <div class="access-heading">
+        <span class="access-heading-icon">👤</span>
+        <h2>Dados de acesso</h2>
+      </div>
+      <div class="access-fields">
+        <div class="field-group">
+          <label for="matricula">Matrícula</label>
+          <div class="input-shell">
+            <span class="field-icon">●</span>
+            <input id="matricula" type="text" inputmode="numeric" maxlength="12"
+                   placeholder="Digite sua matrícula" autocomplete="username" required>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="senha">Senha de 5 caracteres</label>
+          <div class="input-shell">
+            <span class="field-icon">▣</span>
+            <input id="senha" type="password" inputmode="text" pattern="[A-Za-z0-9]{5}"
+                   minlength="5" maxlength="5" placeholder="Digite sua senha"
+                   autocomplete="current-password" required>
+          </div>
+        </div>
+      </div>
+      <button class="primary access-submit" type="submit">◉ &nbsp; Ver mensagem</button>
+      <p id="erro" class="error">Matrícula ou senha incorreta. Confira e tente novamente.</p>
+      <div class="base-status" id="baseStatus">Importe a planilha no acesso administrativo.</div>
+    </form>
+    <div class="privacy-callout">♢ &nbsp; Sua senha é <strong>pessoal</strong>. Não compartilhe com outras pessoas.</div>
+    <div class="secure-footer">
+      <strong>▣ &nbsp; Seus dados estão seguros.</strong>
+      <span>Acesso restrito e confidencial.</span>
+    </div>
+  </main>
+
+  <main id="admin" class="shell" hidden>
+    <div class="portal-tabs">
+      <button type="button" onclick="mostrarFuncionario()">Funcionário</button>
+      <button class="active" type="button">Administrador</button>
+    </div>
+    <div id="adminLogin">
+      <span class="eyebrow">Portal administrativo</span>
+      <h1>Atualize os resultados.</h1>
+      <p class="intro">Entre com a matrícula e senha do administrador.</p>
+      <form class="form-card" onsubmit="entrarAdmin(event)">
+        <label for="adminMatricula">Dados de acesso</label>
+        <div class="input-row">
+          <input id="adminMatricula" inputmode="numeric" placeholder="Matrícula" required>
+          <input id="adminSenha" type="password" inputmode="numeric" maxlength="5" placeholder="Senha •••••" required>
+          <button class="primary" type="submit">Entrar</button>
+        </div>
+        <p id="adminErro" class="error">Matrícula ou senha incorreta.</p>
+        <div class="demo">Demonstração local: use <strong>83324 + 24680</strong>.</div>
+      </form>
+    </div>
+    <div id="adminUpload" hidden>
+      <span class="eyebrow">Portal administrativo</span>
+      <h1>Importar planilha de médias</h1>
+      <p class="intro">A planilha fornece matrícula, nome e médias. O portal monta automaticamente a mensagem personalizada de cada funcionário.</p>
+      <div id="dropZone" class="drop-zone">
+        <span class="upload-icon">⇧</span>
+        <strong id="arquivoNome">Arraste a planilha aqui</strong>
+        <p>Formatos aceitos: .xlsx e .xlsm</p>
+        <label class="file-label">Escolher arquivo
+          <input id="arquivoPlanilha" type="file" accept=".xlsx,.xlsm">
+        </label>
+      </div>
+      <button class="primary" style="margin-top:16px" type="button" onclick="importarPlanilha()">Importar e atualizar portal</button>
+      <p id="importacaoStatus" class="privacy"></p>
+    </div>
+  </main>
+
+  <main id="resultado" class="shell" hidden>
+    <h1>Olá, <span id="nome"></span>! 👋</h1>
+    <p class="intro">Confira abaixo sua evolução de consumo.</p>
+
+    <section class="dashboard-grid" aria-label="Dashboard de médias">
+      <article class="chart-card">
+        <div class="card-title">
+          <h2>Evolução das médias</h2>
+        </div>
+        <div id="grafico" class="chart" aria-label="Gráfico das médias mensais"></div>
+      </article>
+
+      <aside class="summary-card">
+        <span class="summary-label">Média mais recente</span>
+        <div class="summary-score"><span id="mediaAtual"></span><small>km/l</small></div>
+        <div class="summary-data">
+          <div class="summary-row"><span>Período</span><strong id="periodoAtual"></strong></div>
+          <div class="summary-row"><span>Registros exibidos</span><strong id="quantidadeRegistros"></strong></div>
+        </div>
+      </aside>
+    </section>
+
+    <article class="message-card">
+      <div class="message-head">
+        <span class="check">✓</span>
+        <div>
+          <span>Seu resultado</span>
+          <strong>Informação individual e confidencial</strong>
+        </div>
+      </div>
+      <p id="mensagem" class="message-text"></p>
+    </article>
+    <button class="secondary" type="button" onclick="voltar()">Encerrar consulta</button>
+    <p class="privacy">Por segurança, feche esta página após consultar sua mensagem.</p>
+  </main>
+
+  <script>
+    const CHAVE_BASE = "portal_medias_base_v1";
+    const ADMIN_MATRICULA = "83324";
+    const ADMIN_HASH = "31d954475e3e97ebc4a9e7b291a8ff2dae697de76d19b8bae5a229c0f1fd4835";
+    let arquivoSelecionado = null;
+    let registros = carregarBase();
+
+    const matricula = document.getElementById("matricula");
+    const senha = document.getElementById("senha");
+    const arquivoInput = document.getElementById("arquivoPlanilha");
+    const dropZone = document.getElementById("dropZone");
+
+    atualizarStatusBase();
+    matricula.addEventListener("input", limparErro);
+    senha.addEventListener("input", () => {
+      senha.value = senha.value.replace(/[^a-z0-9]/gi, "").slice(0, 5);
+      limparErro();
+    });
+    arquivoInput.addEventListener("change", () => selecionarArquivo(arquivoInput.files[0]));
+    dropZone.addEventListener("dragover", event => {
+      event.preventDefault();
+      dropZone.classList.add("dragging");
+    });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragging"));
+    dropZone.addEventListener("drop", event => {
+      event.preventDefault();
+      dropZone.classList.remove("dragging");
+      selecionarArquivo(event.dataTransfer.files[0]);
+    });
+
+    function carregarBase() {
+      try {
+        return JSON.parse(localStorage.getItem(CHAVE_BASE) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function atualizarStatusBase() {
+      document.getElementById("baseStatus").textContent = registros.length
+        ? "✓ Planilha importada e pronta para consulta."
+        : "Importe a planilha no acesso administrativo.";
+    }
+
+    async function hash(texto) {
+      const bytes = new TextEncoder().encode(texto);
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(digest)]
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    async function consultar(event) {
+      event.preventDefault();
+      const senhaHash = await hash(`portal-funcionario:${senha.value}`);
+      const registro = registros.find(item =>
+        item.matricula === matricula.value.trim() && item.senhaHash === senhaHash
+      );
+      if (!registro) {
+        document.getElementById("erro").style.display = "block";
+        return;
+      }
+      document.getElementById("nome").textContent = registro.nome;
+      document.getElementById("mensagem").textContent = registro.mensagem;
+      document.getElementById("periodoAtual").textContent =
+        registro.historico[registro.historico.length - 1].mes;
+      document.getElementById("quantidadeRegistros").textContent = registro.historico.length;
+      document.getElementById("mediaAtual").textContent =
+        registro.historico[registro.historico.length - 1].valor.toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      montarGrafico(registro.historico);
+      document.getElementById("consulta").hidden = true;
+      document.getElementById("resultado").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function montarGrafico(historico) {
+      const grafico = document.getElementById("grafico");
+      const maximo = Math.max(10, ...historico.map(item => item.valor));
+      grafico.innerHTML = historico.map((item, indice) => `
+        <div class="chart-column">
+          <div class="chart-bar ${indice === historico.length - 1 ? "current" : ""}"
+               style="height:${Math.max((item.valor / maximo) * 100, 8)}%">
+            <span class="chart-value">${item.valor.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}</span>
+          </div>
+          <span class="chart-month">${item.mes}</span>
+        </div>
+      `).join("");
+    }
+
+    function limparErro() {
+      document.getElementById("erro").style.display = "none";
+    }
+
+    function voltar() {
+      document.getElementById("resultado").hidden = true;
+      document.getElementById("consulta").hidden = false;
+      limparErro();
+      matricula.value = "";
+      senha.value = "";
+      matricula.focus();
+    }
+
+    function mostrarAdmin() {
+      document.getElementById("consulta").hidden = true;
+      document.getElementById("resultado").hidden = true;
+      document.getElementById("admin").hidden = false;
+    }
+
+    function mostrarFuncionario() {
+      document.getElementById("admin").hidden = true;
+      document.getElementById("resultado").hidden = true;
+      document.getElementById("consulta").hidden = false;
+      atualizarStatusBase();
+    }
+
+    async function entrarAdmin(event) {
+      event.preventDefault();
+      const matriculaAdmin = document.getElementById("adminMatricula").value.trim();
+      const senhaAdmin = document.getElementById("adminSenha").value;
+      const senhaCorreta = await hash(`portal-admin:${senhaAdmin}`) === ADMIN_HASH;
+      const ok = matriculaAdmin === ADMIN_MATRICULA && senhaCorreta;
+      document.getElementById("adminErro").style.display = ok ? "none" : "block";
+      if (ok) {
+        document.getElementById("adminLogin").hidden = true;
+        document.getElementById("adminUpload").hidden = false;
+      }
+    }
+
+    function selecionarArquivo(arquivo) {
+      if (!arquivo) return;
+      const extensaoValida = /\.(xlsx|xlsm)$/i.test(arquivo.name);
+      if (!extensaoValida) {
+        document.getElementById("importacaoStatus").textContent = "Escolha um arquivo .xlsx ou .xlsm.";
+        return;
+      }
+      arquivoSelecionado = arquivo;
+      document.getElementById("arquivoNome").textContent = arquivo.name;
+      document.getElementById("importacaoStatus").textContent = "";
+    }
+
+    async function importarPlanilha() {
+      const status = document.getElementById("importacaoStatus");
+      if (!arquivoSelecionado) {
+        status.textContent = "Selecione uma planilha antes de importar.";
+        return;
+      }
+      if (!window.ExcelJS) {
+        status.textContent = "Não foi possível carregar o leitor de Excel. Verifique sua conexão com a internet.";
+        return;
+      }
+      status.textContent = "Lendo e validando a planilha…";
+      try {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await arquivoSelecionado.arrayBuffer());
+        const abaMedias = workbook.getWorksheet("Médias") || workbook.getWorksheet("Medias");
+        const abaMotoristas = workbook.getWorksheet("Motoristas");
+        if (!abaMedias || !abaMotoristas) {
+          throw new Error('O arquivo precisa conter as abas "Médias" e "Motoristas".');
+        }
+
+        const medias = [];
+        abaMedias.eachRow((row, numero) => {
+          if (numero === 1) return;
+          const valor = Number(valorCelula(row.getCell(6)));
+          if (Number.isFinite(valor)) {
+            medias.push({
+              matricula: String(valorCelula(row.getCell(2)) || "").trim(),
+              nome: String(valorCelula(row.getCell(3)) || "").trim(),
+              mes: formatarMes(valorCelula(row.getCell(1))),
+              valor
+            });
+          }
+        });
+
+        const importados = [];
+        for (let linha = 2; linha <= abaMotoristas.rowCount; linha++) {
+          const row = abaMotoristas.getRow(linha);
+          const matriculaFuncionario = String(valorCelula(row.getCell(1)) || "").trim();
+          const nome = String(valorCelula(row.getCell(2)) || "").trim();
+          const senhaOriginal = String(valorCelula(row.getCell(5)) || "").trim().padStart(5, "0");
+          if (!matriculaFuncionario && !nome) continue;
+          if (!matriculaFuncionario || !nome || !/^[a-z0-9]{5}$/i.test(senhaOriginal)) {
+            throw new Error(`Confira matrícula, nome e senha na linha ${linha} da aba Motoristas.`);
+          }
+          const historico = medias.filter(item =>
+            item.matricula === matriculaFuncionario ||
+            item.nome.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR")
+          ).slice(-12);
+          if (!historico.length) throw new Error(`Não foram encontradas médias para ${nome}.`);
+          importados.push({
+            matricula: matriculaFuncionario,
+            nome,
+            senhaHash: await hash(`portal-funcionario:${senhaOriginal}`),
+            mensagem: gerarMensagem(nome, historico),
+            historico
+          });
+        }
+        if (!importados.length) throw new Error("Nenhum funcionário válido foi encontrado.");
+        registros = importados;
+        localStorage.setItem(CHAVE_BASE, JSON.stringify(registros));
+        status.textContent = "✓ Planilha importada com sucesso!";
+        atualizarStatusBase();
+      } catch (erro) {
+        status.textContent = erro instanceof Error ? erro.message : "Não foi possível ler a planilha.";
+      }
+    }
+
+    function valorCelula(celula) {
+      const valor = celula.value;
+      if (valor && typeof valor === "object") {
+        if ("result" in valor) return valor.result;
+        if ("text" in valor) return valor.text;
+        if ("richText" in valor) return valor.richText.map(item => item.text).join("");
+      }
+      return valor;
+    }
+
+    function formatarMes(valor) {
+      let data;
+      if (valor instanceof Date) data = valor;
+      else if (typeof valor === "number") data = new Date(Date.UTC(1899, 11, 30) + valor * 86400000);
+      else {
+        const tentativa = new Date(valor);
+        if (!Number.isNaN(tentativa.getTime())) data = tentativa;
+      }
+      return data
+        ? data.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }).replace(".", "")
+        : String(valor || "Período");
+    }
+
+    function gerarMensagem(nome, historico) {
+      const atual = historico[historico.length - 1];
+      const anterior = historico[historico.length - 2];
+      const media = atual.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (!anterior) return `${nome}, sua média em ${atual.mes} foi ${media} km/l.\n\nContinue acompanhando sua evolução de consumo.`;
+      const diferenca = atual.valor - anterior.valor;
+      const comparacao = diferenca > 0.01
+        ? `Sua média melhorou ${diferenca.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ponto(s). Parabéns pela evolução!`
+        : diferenca < -0.01
+          ? `Sua média diminuiu ${Math.abs(diferenca).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ponto(s). Continue buscando uma condução mais eficiente.`
+          : "Sua média permaneceu estável.";
+      return `${nome}, sua média em ${atual.mes} foi ${media} km/l.\n\n${comparacao}`;
+    }
+  </script>
+</body>
+</html>
