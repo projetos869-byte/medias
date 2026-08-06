@@ -102,16 +102,15 @@ const server = createServer(async (request, response) => {
       }
 
       const resultado = await pool.query(
-        `SELECT matricula, nome
+        `SELECT matricula, nome, senha_hash
            FROM funcionarios
           WHERE matricula = $1
-            AND senha_hash = crypt($2, senha_hash)
           LIMIT 1`,
-        [matricula, senha],
+        [matricula],
       );
 
       const funcionario = resultado.rows[0];
-      if (!funcionario) {
+      if (!funcionario || !await bcrypt.compare(senha, funcionario.senha_hash)) {
         return responderJson(response, 401, {
           ok: false,
           error: "Matrícula ou senha incorreta.",
