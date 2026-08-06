@@ -170,11 +170,15 @@ const server = createServer(async (request, response) => {
       tentativasLogin.delete(chave);
 
       const medias = await pool.query(
-        `SELECT mes_ano AS mes, media_consumo AS valor
-           FROM resultados_consumo
-          WHERE matricula = $1
-          ORDER BY id
-          LIMIT 12`,
+        `SELECT mes, valor
+           FROM (
+             SELECT id, mes_ano AS mes, media_consumo AS valor
+               FROM resultados_consumo
+              WHERE matricula = $1
+              ORDER BY id DESC
+              LIMIT 12
+           ) ultimos
+          ORDER BY id`,
         [matricula],
       ).catch(() => ({ rows: [] }));
 

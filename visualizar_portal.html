@@ -427,6 +427,27 @@
       font-size: 12px;
       font-weight: 700;
     }
+    .target-line {
+      position: absolute;
+      z-index: 3;
+      right: 8px;
+      left: 8px;
+      bottom: calc(30px + var(--target-offset));
+      border-top: 3px dashed #e07a24;
+      pointer-events: none;
+    }
+    .target-line span {
+      position: absolute;
+      top: -25px;
+      right: 0;
+      padding: 3px 7px;
+      color: #9b470d;
+      background: #fff3e8;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
     .legend {
       display: flex;
       align-items: center;
@@ -803,12 +824,13 @@
       <article class="chart-card">
         <div class="card-title">
           <h2>Evolução das médias</h2>
+          <span>Meta mínima: 2,30 km/l</span>
         </div>
         <div id="grafico" class="chart" aria-label="Gráfico das médias mensais"></div>
       </article>
 
       <aside class="summary-card">
-        <span class="summary-label">Média mais recente</span>
+        <span class="summary-label">Média do motorista no último mês</span>
         <div class="summary-score"><span id="mediaAtual"></span><small>km/l</small></div>
         <div class="summary-data">
           <div class="summary-row"><span>Período</span><strong id="periodoAtual"></strong></div>
@@ -980,8 +1002,15 @@
 
     function montarGrafico(historico) {
       const grafico = document.getElementById("grafico");
-      const maximo = Math.max(10, ...historico.map(item => item.valor));
-      grafico.innerHTML = historico.map((item, indice) => `
+      const meta = 2.30;
+      const maximo = Math.max(meta * 1.15, ...historico.map(item => item.valor * 1.15));
+      const alturaGrafico = window.matchMedia("(max-width: 640px)").matches ? 210 : 260;
+      grafico.style.setProperty("--target-offset", `${Math.min(meta / maximo, 1) * alturaGrafico}px`);
+      grafico.innerHTML = `
+        <div class="target-line" aria-label="Meta mínima de 2,30 quilômetros por litro">
+          <span>Meta 2,30</span>
+        </div>
+      ` + historico.map((item, indice) => `
         <div class="chart-column">
           <div class="chart-bar ${indice === historico.length - 1 ? "current" : ""}"
                style="height:${Math.max((item.valor / maximo) * 100, 8)}%">
