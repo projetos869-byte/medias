@@ -377,11 +377,24 @@
       font-weight: 700;
     }
     .chart {
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      scrollbar-width: thin;
+      scrollbar-color: #8bb9a7 #edf5f1;
+    }
+    .chart-track {
       position: relative;
       display: flex;
       align-items: flex-end;
+      justify-content: space-around;
       gap: 16px;
       height: 260px;
+      width: max-content;
+      min-width: 100%;
       padding: 28px 8px 30px;
       border-bottom: 1px solid #cbd8d2;
       background:
@@ -393,7 +406,7 @@
     .chart-column {
       position: relative;
       display: flex;
-      flex: 1;
+      flex: 0 0 82px;
       align-items: flex-end;
       justify-content: center;
       height: 100%;
@@ -677,11 +690,14 @@
       .summary-data {
         grid-template-columns: 1fr;
       }
-      .chart {
+      .chart-track {
         height: 210px;
         gap: 7px;
         padding-right: 2px;
         padding-left: 2px;
+      }
+      .chart-column {
+        flex-basis: 70px;
       }
       .chart-bar {
         width: min(44px, 76%);
@@ -980,26 +996,30 @@
       const grafico = document.getElementById("grafico");
       const meta = 2.30;
       const maximo = Math.max(meta * 1.15, ...historico.map(item => item.valor * 1.15));
-      const estiloGrafico = getComputedStyle(grafico);
+      grafico.innerHTML = `
+        <div class="chart-track">
+          <div class="target-line" aria-label="Meta mínima de 2,30 quilômetros por litro"></div>
+          ${historico.map((item, indice) => `
+            <div class="chart-column">
+              <div class="chart-bar ${indice === historico.length - 1 ? "current" : ""}"
+                   style="height:${Math.max((item.valor / maximo) * 100, 8)}%">
+                <span class="chart-value">${item.valor.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}</span>
+              </div>
+              <span class="chart-month">${item.mes}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      const faixa = grafico.querySelector(".chart-track");
+      const estiloGrafico = getComputedStyle(faixa);
       const espacoSuperior = parseFloat(estiloGrafico.paddingTop) || 0;
       const espacoInferior = parseFloat(estiloGrafico.paddingBottom) || 0;
-      const alturaUtil = grafico.clientHeight - espacoSuperior - espacoInferior;
-      grafico.style.setProperty("--chart-bottom", `${espacoInferior}px`);
-      grafico.style.setProperty("--target-offset", `${Math.min(meta / maximo, 1) * alturaUtil}px`);
-      grafico.innerHTML = `
-        <div class="target-line" aria-label="Meta mínima de 2,30 quilômetros por litro"></div>
-      ` + historico.map((item, indice) => `
-        <div class="chart-column">
-          <div class="chart-bar ${indice === historico.length - 1 ? "current" : ""}"
-               style="height:${Math.max((item.valor / maximo) * 100, 8)}%">
-            <span class="chart-value">${item.valor.toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}</span>
-          </div>
-          <span class="chart-month">${item.mes}</span>
-        </div>
-      `).join("");
+      const alturaUtil = faixa.clientHeight - espacoSuperior - espacoInferior;
+      faixa.style.setProperty("--chart-bottom", `${espacoInferior}px`);
+      faixa.style.setProperty("--target-offset", `${Math.min(meta / maximo, 1) * alturaUtil}px`);
     }
 
     function limparErro() {
