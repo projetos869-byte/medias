@@ -75,7 +75,7 @@ const server = createServer(async (request, response) => {
       if (!matricula || !/^[a-z0-9]{5}$/i.test(senha)) {
         return responderJson(response, 400, {
           ok: false,
-          error: "Informe a matrícula e uma senha alfanumérica de 5 caracteres.",
+          error: "Informe a matrícula e uma senha de 5 caracteres.",
         });
       }
 
