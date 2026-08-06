@@ -969,6 +969,7 @@
     function exibirResultado(registro) {
       const historico = Array.isArray(registro.historico) ? registro.historico : [];
       document.getElementById("nome").textContent = registro.nome;
+      document.getElementById("resultado").hidden = false;
 
       const dashboard = document.getElementById("dashboardMedias");
       dashboard.hidden = historico.length === 0;
@@ -984,7 +985,6 @@
         montarGrafico(historico);
       }
       document.getElementById("consulta").hidden = true;
-      document.getElementById("resultado").hidden = false;
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
