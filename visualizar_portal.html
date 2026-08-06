@@ -360,6 +360,10 @@
       border-radius: 22px;
       box-shadow: 0 18px 50px rgba(24,58,47,.07);
     }
+    .chart-card {
+      min-width: 0;
+      overflow: hidden;
+    }
     .card-title {
       display: flex;
       align-items: center;
@@ -604,8 +608,8 @@
       .shell,
       #resultado,
       #admin {
-        width: min(100% - 24px, 520px);
-        padding: 32px 0 48px;
+        width: min(520px, calc(100% - 20px));
+        padding: 24px 0 38px;
       }
       .portal-tabs {
         display: grid;
@@ -617,52 +621,65 @@
         min-height: 42px;
       }
       .lookup-art {
-        width: 88px;
-        height: 88px;
-        margin-bottom: 22px;
-        border-radius: 25px;
-        transform: scale(.9);
+        width: 76px;
+        height: 76px;
+        margin-bottom: 16px;
+        border-radius: 22px;
+        transform: none;
       }
       h1 {
-        font-size: clamp(30px, 10vw, 40px);
-        line-height: 1.08;
+        font-size: clamp(27px, 8.5vw, 34px);
+        line-height: 1.1;
+      }
+      .hero-title {
+        margin: 12px 0 10px;
+        letter-spacing: -.035em;
       }
       .intro {
-        font-size: 15px;
-        line-height: 1.55;
+        max-width: 330px;
+        font-size: 14px;
+        line-height: 1.45;
       }
       .form-card {
-        margin-top: 28px;
-        padding: 16px;
+        margin-top: 20px;
+        padding: 14px;
         border-radius: 17px;
       }
       .access-card {
-        padding: 18px 14px;
+        padding: 16px 12px;
       }
       .access-heading {
-        margin-bottom: 22px;
+        margin-bottom: 18px;
       }
       .access-heading-icon {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
       }
       .access-heading h2 {
-        font-size: 16px;
+        font-size: 15px;
+      }
+      .access-fields {
+        gap: 16px;
       }
       .input-shell {
-        min-height: 60px;
-        padding: 0 14px;
+        min-height: 54px;
+        padding: 0 12px;
+        border-radius: 13px;
       }
       .access-card .input-shell input {
         min-height: auto;
         font-size: 16px;
       }
       .access-submit {
-        min-height: 56px;
+        min-height: 52px;
+        margin-top: 18px;
+        font-size: 14px;
       }
       .privacy-callout {
-        margin-top: 18px;
+        margin-top: 14px;
+        padding: 13px 14px;
         border-radius: 16px;
+        font-size: 12px;
       }
       .input-row {
         grid-template-columns: 1fr;
@@ -676,19 +693,38 @@
         padding: 0 18px;
       }
       .dashboard-grid {
-        gap: 12px;
-        margin-top: 22px;
+        gap: 10px;
+        margin-top: 18px;
       }
       .chart-card,
       .summary-card {
-        padding: 17px;
-        border-radius: 18px;
+        padding: 14px;
+        border-radius: 16px;
+      }
+      .card-title {
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
+      .card-title h2 {
+        font-size: 14px;
+      }
+      .card-title span {
+        max-width: 110px;
+        text-align: right;
       }
       .summary-score {
-        font-size: 46px;
+        margin-bottom: 14px;
+        font-size: 42px;
       }
       .summary-data {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding-top: 12px;
+      }
+      .summary-row {
+        display: grid;
+        gap: 4px;
+        font-size: 12px;
       }
       .chart-track {
         height: 210px;
@@ -721,8 +757,8 @@
         line-height: 1.65;
       }
       .drop-zone {
-        margin-top: 26px;
-        padding: 30px 16px;
+        margin-top: 20px;
+        padding: 24px 12px;
         border-radius: 18px;
       }
       .secondary {
@@ -735,7 +771,7 @@
       .shell,
       #resultado,
       #admin {
-        width: calc(100% - 18px);
+        width: calc(100% - 14px);
       }
       .portal-tabs button {
         padding-right: 8px;
