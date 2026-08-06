@@ -14,7 +14,12 @@
       --paper: #fbfcfb;
     }
     * { box-sizing: border-box; }
-    html { background: var(--paper); }
+    html {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: var(--paper);
+    }
     body {
       margin: 0;
       min-height: 100vh;
@@ -82,6 +87,8 @@
     }
     #resultado {
       width: min(1040px, calc(100% - 48px));
+      min-width: 0;
+      overflow-x: clip;
     }
     #admin {
       width: min(780px, calc(100% - 40px));
@@ -354,6 +361,7 @@
     .dashboard-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.5fr) minmax(250px, .5fr);
+      min-width: 0;
       gap: 18px;
       margin-top: 28px;
       text-align: left;
@@ -386,12 +394,17 @@
       font-weight: 700;
     }
     .chart {
+      display: block;
+      min-width: 0;
+      max-width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
       width: 100%;
       padding-bottom: 8px;
       -webkit-overflow-scrolling: touch;
-      touch-action: pan-x;
+      overscroll-behavior-x: contain;
+      touch-action: auto;
+      contain: inline-size;
       scrollbar-width: thin;
       scrollbar-color: #8bb9a7 #edf5f1;
     }
