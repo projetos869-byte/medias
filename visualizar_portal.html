@@ -1112,8 +1112,12 @@
           });
           const dados = await resposta.json();
           if (!resposta.ok) throw new Error(dados.error || "Não foi possível importar.");
+          status.textContent = dados.ignorados
+            ? `✓ ${dados.importados} linha(s) importada(s). ${dados.ignorados} ignorada(s) por matrícula não cadastrada.`
+            : `✓ ${dados.importados} linha(s) importada(s) com sucesso!`;
+        } else {
+          status.textContent = "✓ Planilha lida com sucesso!";
         }
-        status.textContent = "✓ Planilha importada com sucesso!";
         atualizarStatusBase();
       } catch (erro) {
         status.textContent = erro instanceof Error ? erro.message : "Não foi possível ler a planilha.";

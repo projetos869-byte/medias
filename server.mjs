@@ -208,12 +208,14 @@ const server = createServer(async (request, response) => {
       }
 
       const client = await pool.connect();
+      let importados = 0;
+      let ignorados = 0;
       try {
         await client.query("BEGIN");
         await client.query(`
           CREATE TABLE IF NOT EXISTS resultados_consumo (
             id BIGSERIAL PRIMARY KEY,
-            matricula TEXT NOT NULL REFERENCES funcionarios(matricula) ON DELETE CASCADE,
+            matricula TEXT NOT NULL,
             nome TEXT NOT NULL,
             mes_ano TEXT NOT NULL,
             km NUMERIC NOT NULL DEFAULT 0,
@@ -233,10 +235,13 @@ const server = createServer(async (request, response) => {
           if (!matricula || !nome || !mes || ![km, totalCons, valor].every(Number.isFinite)) {
             throw new Error("Linha inválida na planilha.");
           }
-          await client.query(
+          const resultado = await client.query(
             `INSERT INTO resultados_consumo
                (matricula, nome, mes_ano, km, total_consumo, media_consumo)
-             VALUES ($1, $2, $3, $4, $5, $6)
+             SELECT $1, $2, $3, $4, $5, $6
+              WHERE EXISTS (
+                SELECT 1 FROM funcionarios WHERE matricula = $1
+              )
              ON CONFLICT (matricula, mes_ano) DO UPDATE SET
                nome = EXCLUDED.nome,
                km = EXCLUDED.km,
@@ -245,15 +250,24 @@ const server = createServer(async (request, response) => {
                criado_em = NOW()`,
             [matricula, nome, mes, km, totalCons, valor],
           );
+          if (resultado.rowCount) importados += 1;
+          else ignorados += 1;
+        }
+        if (!importados) {
+          throw new Error("Nenhuma matrícula da planilha foi encontrada no cadastro de funcionários.");
         }
         await client.query("COMMIT");
       } catch (error) {
         await client.query("ROLLBACK");
-        throw error;
+        console.error("Falha na importação:", error);
+        return responderJson(response, 400, {
+          ok: false,
+          error: error instanceof Error ? error.message : "Não foi possível importar a planilha.",
+        });
       } finally {
         client.release();
       }
-      return responderJson(response, 200, { ok: true, importados: medias.length });
+      return responderJson(response, 200, { ok: true, importados, ignorados });
     }
 
     if (request.method === "POST" && url.pathname === "/api/admin/logout") {
