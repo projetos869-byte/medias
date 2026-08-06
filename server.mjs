@@ -83,6 +83,7 @@ const server = createServer(async (request, response) => {
         `SELECT matricula, nome, senha_hash
            FROM administradores
           WHERE matricula = $1
+            AND ativo = TRUE
           LIMIT 1`,
         [matricula],
       ).catch(() => ({ rows: [] }));
