@@ -432,7 +432,7 @@
       z-index: 3;
       right: 8px;
       left: 8px;
-      bottom: calc(30px + var(--target-offset));
+      bottom: calc(var(--chart-bottom) + var(--target-offset));
       border-top: 3px dashed #e07a24;
       pointer-events: none;
     }
@@ -839,16 +839,6 @@
       </aside>
     </section>
 
-    <article class="message-card">
-      <div class="message-head">
-        <span class="check">✓</span>
-        <div>
-          <span>Seu resultado</span>
-          <strong>Informação individual e confidencial</strong>
-        </div>
-      </div>
-      <p id="mensagem" class="message-text"></p>
-    </article>
     <button class="secondary" type="button" onclick="voltar()">Encerrar consulta</button>
     <p class="privacy">Por segurança, feche esta página após consultar sua mensagem.</p>
   </main>
@@ -979,8 +969,6 @@
     function exibirResultado(registro) {
       const historico = Array.isArray(registro.historico) ? registro.historico : [];
       document.getElementById("nome").textContent = registro.nome;
-      document.getElementById("mensagem").textContent =
-        registro.mensagem || `${registro.nome}, seu acesso foi confirmado com segurança.`;
 
       const dashboard = document.getElementById("dashboardMedias");
       dashboard.hidden = historico.length === 0;
@@ -1004,8 +992,12 @@
       const grafico = document.getElementById("grafico");
       const meta = 2.30;
       const maximo = Math.max(meta * 1.15, ...historico.map(item => item.valor * 1.15));
-      const alturaGrafico = window.matchMedia("(max-width: 640px)").matches ? 210 : 260;
-      grafico.style.setProperty("--target-offset", `${Math.min(meta / maximo, 1) * alturaGrafico}px`);
+      const estiloGrafico = getComputedStyle(grafico);
+      const espacoSuperior = parseFloat(estiloGrafico.paddingTop) || 0;
+      const espacoInferior = parseFloat(estiloGrafico.paddingBottom) || 0;
+      const alturaUtil = grafico.clientHeight - espacoSuperior - espacoInferior;
+      grafico.style.setProperty("--chart-bottom", `${espacoInferior}px`);
+      grafico.style.setProperty("--target-offset", `${Math.min(meta / maximo, 1) * alturaUtil}px`);
       grafico.innerHTML = `
         <div class="target-line" aria-label="Meta mínima de 2,30 quilômetros por litro">
           <span>Meta 2,30</span>
