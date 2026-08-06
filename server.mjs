@@ -23,6 +23,35 @@ const pool = new Pool({
   max: 5,
 });
 const sessoesAdmin = new Map();
+const tentativasLogin = new Map();
+const LIMITE_TENTATIVAS = 5;
+const TEMPO_BLOQUEIO_MS = 30_000;
+
+function chaveLogin(request, matricula) {
+  const encaminhado = String(request.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return `${encaminhado || request.socket.remoteAddress || "desconhecido"}:${matricula}`;
+}
+
+function bloqueioLogin(chave) {
+  const controle = tentativasLogin.get(chave);
+  if (!controle?.bloqueadoAte) return 0;
+  const restante = controle.bloqueadoAte - Date.now();
+  if (restante <= 0) {
+    tentativasLogin.delete(chave);
+    return 0;
+  }
+  return Math.ceil(restante / 1000);
+}
+
+function registrarFalha(chave) {
+  const controle = tentativasLogin.get(chave) || { erros: 0, bloqueadoAte: 0 };
+  controle.erros += 1;
+  if (controle.erros >= LIMITE_TENTATIVAS) {
+    controle.bloqueadoAte = Date.now() + TEMPO_BLOQUEIO_MS;
+  }
+  tentativasLogin.set(chave, controle);
+  return bloqueioLogin(chave);
+}
 
 function cookies(request) {
   return Object.fromEntries(
@@ -79,6 +108,17 @@ const server = createServer(async (request, response) => {
         });
       }
 
+      const chave = chaveLogin(request, matricula);
+      const segundosRestantes = bloqueioLogin(chave);
+      if (segundosRestantes) {
+        response.setHeader("retry-after", String(segundosRestantes));
+        return responderJson(response, 429, {
+          ok: false,
+          error: `Muitas tentativas incorretas. Aguarde ${segundosRestantes} segundos.`,
+          retryAfter: segundosRestantes,
+        });
+      }
+
       const adminResultado = await pool.query(
         `SELECT matricula, nome, senha_hash
            FROM administradores
@@ -89,6 +129,7 @@ const server = createServer(async (request, response) => {
       ).catch(() => ({ rows: [] }));
       const admin = adminResultado.rows[0];
       if (admin && await bcrypt.compare(senha, admin.senha_hash)) {
+        tentativasLogin.delete(chave);
         const token = randomBytes(32).toString("hex");
         sessoesAdmin.set(token, { matricula: admin.matricula, expira: Date.now() + 8 * 60 * 60 * 1000 });
         response.setHeader(
@@ -112,11 +153,21 @@ const server = createServer(async (request, response) => {
 
       const funcionario = resultado.rows[0];
       if (!funcionario || !await bcrypt.compare(senha, funcionario.senha_hash)) {
+        const bloqueadoPor = registrarFalha(chave);
+        if (bloqueadoPor) {
+          response.setHeader("retry-after", String(bloqueadoPor));
+          return responderJson(response, 429, {
+            ok: false,
+            error: `Limite de tentativas atingido. Aguarde ${bloqueadoPor} segundos.`,
+            retryAfter: bloqueadoPor,
+          });
+        }
         return responderJson(response, 401, {
           ok: false,
           error: "Matrícula ou senha incorreta.",
         });
       }
+      tentativasLogin.delete(chave);
 
       const medias = await pool.query(
         `SELECT mes_ano AS mes, media_consumo AS valor

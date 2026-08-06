@@ -769,7 +769,7 @@
           </div>
         </div>
       </div>
-      <button class="primary access-submit" type="submit">◉ &nbsp; Ver mensagem</button>
+      <button id="botaoLogin" class="primary access-submit" type="submit">◉ &nbsp; Ver mensagem</button>
       <p id="erro" class="error">Matrícula ou senha incorreta. Confira e tente novamente.</p>
       <div class="base-status" id="baseStatus">Importe a planilha no acesso administrativo.</div>
     </form>
@@ -835,6 +835,7 @@
     const CHAVE_BASE = "portal_medias_base_v1";
     let arquivoSelecionado = null;
     let registros = carregarBase();
+    let contadorBloqueio = null;
 
     const matricula = document.getElementById("matricula");
     const senha = document.getElementById("senha");
@@ -905,6 +906,10 @@
             })
           });
           const dados = await resposta.json();
+          if (resposta.status === 429) {
+            iniciarBloqueio(Number(dados.retryAfter) || 30);
+            return;
+          }
           if (resposta.ok && dados.ok && dados.tipo === "admin") {
             abrirAdmin();
             return;
@@ -924,6 +929,29 @@
       }
 
       exibirResultado(registro);
+    }
+
+    function iniciarBloqueio(segundos) {
+      const erro = document.getElementById("erro");
+      const botao = document.getElementById("botaoLogin");
+      clearInterval(contadorBloqueio);
+      let restante = Math.max(1, Math.ceil(segundos));
+      const atualizar = () => {
+        erro.textContent = `Muitas tentativas incorretas. Aguarde ${restante} segundo(s).`;
+        erro.style.display = "block";
+        botao.disabled = true;
+        botao.textContent = `Aguarde ${restante}s`;
+        restante -= 1;
+        if (restante < 0) {
+          clearInterval(contadorBloqueio);
+          contadorBloqueio = null;
+          botao.disabled = false;
+          botao.innerHTML = "◉ &nbsp; Ver mensagem";
+          erro.style.display = "none";
+        }
+      };
+      atualizar();
+      contadorBloqueio = setInterval(atualizar, 1000);
     }
 
     function exibirResultado(registro) {
