@@ -744,7 +744,7 @@
       <span class="trend">↗</span>
     </div>
     <h1 class="hero-title">Consulta de resultado</h1>
-    <p class="intro">Digite sua matrícula e a senha de 5 caracteres recebida para visualizar seu resultado individual.</p>
+    <p class="intro">Digite sua matrícula e senha para visualizar seu resultado individual.</p>
 
     <form class="form-card access-card" onsubmit="consultar(event)">
       <div class="access-heading">
@@ -761,11 +761,10 @@
           </div>
         </div>
         <div class="field-group">
-          <label for="senha">Senha de 5 caracteres</label>
+          <label for="senha">Senha</label>
           <div class="input-shell">
             <span class="field-icon">▣</span>
-            <input id="senha" type="password" inputmode="text" pattern="[A-Za-z0-9]{5}"
-                   minlength="5" maxlength="5" placeholder="Digite sua senha"
+            <input id="senha" type="password" placeholder="Digite sua senha"
                    autocomplete="current-password" required>
           </div>
         </div>
@@ -844,10 +843,7 @@
 
     atualizarStatusBase();
     matricula.addEventListener("input", limparErro);
-    senha.addEventListener("input", () => {
-      senha.value = senha.value.replace(/[^a-z0-9]/gi, "").slice(0, 5);
-      limparErro();
-    });
+    senha.addEventListener("input", limparErro);
     arquivoInput.addEventListener("change", () => selecionarArquivo(arquivoInput.files[0]));
     dropZone.addEventListener("dragover", event => {
       event.preventDefault();

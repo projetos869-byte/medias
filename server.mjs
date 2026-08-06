@@ -72,10 +72,10 @@ const server = createServer(async (request, response) => {
       const matricula = String(body.matricula ?? "").trim();
       const senha = String(body.senha ?? "").trim();
 
-      if (!matricula || !/^[a-z0-9]{5}$/i.test(senha)) {
+      if (!matricula || !senha) {
         return responderJson(response, 400, {
           ok: false,
-          error: "Informe a matrícula e uma senha de 5 caracteres.",
+          error: "Informe a matrícula e a senha.",
         });
       }
 
