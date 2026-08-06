@@ -3,7 +3,9 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
 import pg from "pg";
+import bcrypt from "bcryptjs";
 
 const { Pool } = pg;
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +22,23 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
   max: 5,
 });
+const sessoesAdmin = new Map();
+
+function cookies(request) {
+  return Object.fromEntries(
+    String(request.headers.cookie || "").split(";").map(item => item.trim().split("=")).filter(item => item[0]),
+  );
+}
+
+function sessaoAdmin(request) {
+  const token = cookies(request).portal_admin;
+  const sessao = token && sessoesAdmin.get(token);
+  if (!sessao || sessao.expira < Date.now()) {
+    if (token) sessoesAdmin.delete(token);
+    return null;
+  }
+  return sessao;
+}
 
 function responderJson(response, status, data) {
   response.writeHead(status, {
@@ -60,6 +79,28 @@ const server = createServer(async (request, response) => {
         });
       }
 
+      const adminResultado = await pool.query(
+        `SELECT matricula, nome, senha_hash
+           FROM administradores
+          WHERE matricula = $1
+          LIMIT 1`,
+        [matricula],
+      ).catch(() => ({ rows: [] }));
+      const admin = adminResultado.rows[0];
+      if (admin && await bcrypt.compare(senha, admin.senha_hash)) {
+        const token = randomBytes(32).toString("hex");
+        sessoesAdmin.set(token, { matricula: admin.matricula, expira: Date.now() + 8 * 60 * 60 * 1000 });
+        response.setHeader(
+          "set-cookie",
+          `portal_admin=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800`,
+        );
+        return responderJson(response, 200, {
+          ok: true,
+          tipo: "admin",
+          nome: admin.nome || "Administrador",
+        });
+      }
+
       const resultado = await pool.query(
         `SELECT matricula, nome
            FROM funcionarios
@@ -88,6 +129,7 @@ const server = createServer(async (request, response) => {
 
       return responderJson(response, 200, {
         ok: true,
+        tipo: "funcionario",
         resultado: {
           matricula: funcionario.matricula,
           nome: funcionario.nome,
@@ -101,18 +143,10 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && url.pathname === "/api/admin/importar") {
-      const body = await lerJson(request);
-      const adminMatricula = String(body.matricula ?? "").trim();
-      const adminSenha = String(body.senha ?? "");
-      if (
-        !process.env.ADMIN_MATRICULA ||
-        !process.env.ADMIN_PASSWORD ||
-        adminMatricula !== process.env.ADMIN_MATRICULA ||
-        adminSenha !== process.env.ADMIN_PASSWORD
-      ) {
-        return responderJson(response, 401, { ok: false, error: "Acesso administrativo inválido." });
+      if (!sessaoAdmin(request)) {
+        return responderJson(response, 401, { ok: false, error: "Sessão administrativa expirada." });
       }
-
+      const body = await lerJson(request);
       const medias = Array.isArray(body.medias) ? body.medias : [];
       if (!medias.length || medias.length > 10_000) {
         return responderJson(response, 400, { ok: false, error: "A planilha não contém dados válidos." });
@@ -167,17 +201,11 @@ const server = createServer(async (request, response) => {
       return responderJson(response, 200, { ok: true, importados: medias.length });
     }
 
-    if (request.method === "POST" && url.pathname === "/api/admin/login") {
-      const body = await lerJson(request);
-      const ok =
-        Boolean(process.env.ADMIN_MATRICULA) &&
-        Boolean(process.env.ADMIN_PASSWORD) &&
-        String(body.matricula ?? "").trim() === process.env.ADMIN_MATRICULA &&
-        String(body.senha ?? "") === process.env.ADMIN_PASSWORD;
-      return responderJson(response, ok ? 200 : 401, {
-        ok,
-        ...(ok ? {} : { error: "Acesso administrativo inválido." }),
-      });
+    if (request.method === "POST" && url.pathname === "/api/admin/logout") {
+      const token = cookies(request).portal_admin;
+      if (token) sessoesAdmin.delete(token);
+      response.setHeader("set-cookie", "portal_admin=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0");
+      return responderJson(response, 200, { ok: true });
     }
 
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/visualizar_portal.html")) {

@@ -737,10 +737,6 @@
   </header>
 
   <main id="consulta" class="shell">
-    <div class="portal-tabs">
-      <button id="tabFuncionario" class="active" type="button" onclick="mostrarFuncionario()">Funcionário</button>
-      <button id="tabAdmin" type="button" onclick="mostrarAdmin()">Administrador</button>
-    </div>
     <div class="lookup-art" aria-hidden="true">
       <span class="bar one"></span>
       <span class="bar two"></span>
@@ -782,25 +778,7 @@
   </main>
 
   <main id="admin" class="shell" hidden>
-    <div class="portal-tabs">
-      <button type="button" onclick="mostrarFuncionario()">Funcionário</button>
-      <button class="active" type="button">Administrador</button>
-    </div>
-    <div id="adminLogin">
-      <span class="eyebrow">Portal administrativo</span>
-      <h1>Atualize os resultados.</h1>
-      <p class="intro">Entre com a matrícula e senha do administrador.</p>
-      <form class="form-card" onsubmit="entrarAdmin(event)">
-        <label for="adminMatricula">Dados de acesso</label>
-        <div class="input-row">
-          <input id="adminMatricula" inputmode="numeric" placeholder="Matrícula" required>
-          <input id="adminSenha" type="password" inputmode="numeric" maxlength="5" placeholder="Senha •••••" required>
-          <button class="primary" type="submit">Entrar</button>
-        </div>
-        <p id="adminErro" class="error">Matrícula ou senha incorreta.</p>
-      </form>
-    </div>
-    <div id="adminUpload" hidden>
+    <div id="adminUpload">
       <span class="eyebrow">Portal administrativo</span>
       <h1>Importar planilha de médias</h1>
       <p class="intro">Use somente as colunas: Mês/Ano, Matrícula, Motorista, KM, Total Cons e Média Consumo.</p>
@@ -813,6 +791,7 @@
         </label>
       </div>
       <button class="primary" style="margin-top:16px" type="button" onclick="importarPlanilha()">Importar e atualizar portal</button>
+      <button class="secondary" type="button" onclick="sairAdmin()">Sair do portal administrativo</button>
       <p id="importacaoStatus" class="privacy"></p>
     </div>
   </main>
@@ -930,6 +909,10 @@
             })
           });
           const dados = await resposta.json();
+          if (resposta.ok && dados.ok && dados.tipo === "admin") {
+            abrirAdmin();
+            return;
+          }
           if (resposta.ok && dados.ok) registro = dados.resultado;
         } catch {
           erro.textContent = "Não foi possível conectar ao sistema. Tente novamente.";
@@ -1001,7 +984,7 @@
       matricula.focus();
     }
 
-    function mostrarAdmin() {
+    function abrirAdmin() {
       document.getElementById("consulta").hidden = true;
       document.getElementById("resultado").hidden = true;
       document.getElementById("admin").hidden = false;
@@ -1014,26 +997,11 @@
       atualizarStatusBase();
     }
 
-    async function entrarAdmin(event) {
-      event.preventDefault();
-      const matriculaAdmin = document.getElementById("adminMatricula").value.trim();
-      const senhaAdmin = document.getElementById("adminSenha").value;
-      let ok = false;
-      if (location.protocol !== "file:") {
-        try {
-          const resposta = await fetch("/api/admin/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ matricula: matriculaAdmin, senha: senhaAdmin })
-          });
-          ok = resposta.ok;
-        } catch {}
-      }
-      document.getElementById("adminErro").style.display = ok ? "none" : "block";
-      if (ok) {
-        document.getElementById("adminLogin").hidden = true;
-        document.getElementById("adminUpload").hidden = false;
-      }
+    async function sairAdmin() {
+      await fetch("/api/admin/logout", { method: "POST" }).catch(() => {});
+      mostrarFuncionario();
+      matricula.value = "";
+      senha.value = "";
     }
 
     function selecionarArquivo(arquivo) {
@@ -1087,11 +1055,7 @@
           const resposta = await fetch("/api/admin/importar", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              matricula: document.getElementById("adminMatricula").value.trim(),
-              senha: document.getElementById("adminSenha").value,
-              medias
-            })
+            body: JSON.stringify({ medias })
           });
           const dados = await resposta.json();
           if (!resposta.ok) throw new Error(dados.error || "Não foi possível importar.");
