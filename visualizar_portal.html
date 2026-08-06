@@ -340,23 +340,6 @@
     .privacy-callout strong {
       color: var(--green-dark);
     }
-    .secure-footer {
-      margin-top: 28px;
-      padding: 22px;
-      color: white;
-      background: linear-gradient(135deg, #0b7354, #07513e);
-      border-radius: 22px;
-      font-size: 13px;
-      line-height: 1.5;
-      box-shadow: 0 18px 40px rgba(11,88,67,.18);
-    }
-    .secure-footer strong,
-    .secure-footer span {
-      display: block;
-    }
-    .secure-footer span {
-      color: #bfe9d8;
-    }
     .message-card {
       overflow: hidden;
       padding: 0;
@@ -655,8 +638,7 @@
       .access-submit {
         min-height: 56px;
       }
-      .privacy-callout,
-      .secure-footer {
+      .privacy-callout {
         margin-top: 18px;
         border-radius: 16px;
       }
@@ -797,10 +779,6 @@
       <div class="base-status" id="baseStatus">Importe a planilha no acesso administrativo.</div>
     </form>
     <div class="privacy-callout">♢ &nbsp; Sua senha é <strong>pessoal</strong>. Não compartilhe com outras pessoas.</div>
-    <div class="secure-footer">
-      <strong>▣ &nbsp; Seus dados estão seguros.</strong>
-      <span>Acesso restrito e confidencial.</span>
-    </div>
   </main>
 
   <main id="admin" class="shell" hidden>
@@ -826,7 +804,7 @@
     <div id="adminUpload" hidden>
       <span class="eyebrow">Portal administrativo</span>
       <h1>Importar planilha de médias</h1>
-      <p class="intro">A planilha fornece matrícula, nome e médias. O portal monta automaticamente a mensagem personalizada de cada funcionário.</p>
+      <p class="intro">Use somente as colunas: Mês/Ano, Matrícula, Motorista, KM, Total Cons e Média Consumo.</p>
       <div id="dropZone" class="drop-zone">
         <span class="upload-icon">⇧</span>
         <strong id="arquivoNome">Arraste a planilha aqui</strong>
@@ -1078,11 +1056,8 @@
       try {
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(await arquivoSelecionado.arrayBuffer());
-        const abaMedias = workbook.getWorksheet("Médias") || workbook.getWorksheet("Medias");
-        const abaMotoristas = workbook.getWorksheet("Motoristas");
-        if (!abaMedias || !abaMotoristas) {
-          throw new Error('O arquivo precisa conter as abas "Médias" e "Motoristas".');
-        }
+        const abaMedias = workbook.getWorksheet("Médias") || workbook.getWorksheet("Medias") || workbook.worksheets[0];
+        if (!abaMedias) throw new Error("A planilha não possui uma aba para importar.");
 
         const medias = [];
         abaMedias.eachRow((row, numero) => {
@@ -1093,37 +1068,28 @@
               matricula: String(valorCelula(row.getCell(2)) || "").trim(),
               nome: String(valorCelula(row.getCell(3)) || "").trim(),
               mes: formatarMes(valorCelula(row.getCell(1))),
+              km: Number(valorCelula(row.getCell(4))) || 0,
+              totalCons: Number(valorCelula(row.getCell(5))) || 0,
               valor
             });
           }
         });
 
-        const importados = [];
-        for (let linha = 2; linha <= abaMotoristas.rowCount; linha++) {
-          const row = abaMotoristas.getRow(linha);
-          const matriculaFuncionario = String(valorCelula(row.getCell(1)) || "").trim();
-          const nome = String(valorCelula(row.getCell(2)) || "").trim();
-          const senhaOriginal = String(valorCelula(row.getCell(5)) || "").trim().padStart(5, "0");
-          if (!matriculaFuncionario && !nome) continue;
-          if (!matriculaFuncionario || !nome || !/^[a-z0-9]{5}$/i.test(senhaOriginal)) {
-            throw new Error(`Confira matrícula, nome e senha na linha ${linha} da aba Motoristas.`);
-          }
-          const historico = medias.filter(item =>
-            item.matricula === matriculaFuncionario ||
-            item.nome.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR")
-          ).slice(-12);
-          if (!historico.length) throw new Error(`Não foram encontradas médias para ${nome}.`);
-          importados.push({
-            matricula: matriculaFuncionario,
-            nome,
-            senhaHash: await hash(`portal-funcionario:${senhaOriginal}`),
-            mensagem: gerarMensagem(nome, historico),
-            historico
+        if (!medias.length) throw new Error("Nenhuma linha válida foi encontrada.");
+
+        if (location.protocol !== "file:") {
+          const resposta = await fetch("/api/admin/importar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              matricula: document.getElementById("adminMatricula").value.trim(),
+              senha: document.getElementById("adminSenha").value,
+              medias
+            })
           });
+          const dados = await resposta.json();
+          if (!resposta.ok) throw new Error(dados.error || "Não foi possível importar.");
         }
-        if (!importados.length) throw new Error("Nenhum funcionário válido foi encontrado.");
-        registros = importados;
-        localStorage.setItem(CHAVE_BASE, JSON.stringify(registros));
         status.textContent = "✓ Planilha importada com sucesso!";
         atualizarStatusBase();
       } catch (erro) {
