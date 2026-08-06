@@ -167,6 +167,19 @@ const server = createServer(async (request, response) => {
       return responderJson(response, 200, { ok: true, importados: medias.length });
     }
 
+    if (request.method === "POST" && url.pathname === "/api/admin/login") {
+      const body = await lerJson(request);
+      const ok =
+        Boolean(process.env.ADMIN_MATRICULA) &&
+        Boolean(process.env.ADMIN_PASSWORD) &&
+        String(body.matricula ?? "").trim() === process.env.ADMIN_MATRICULA &&
+        String(body.senha ?? "") === process.env.ADMIN_PASSWORD;
+      return responderJson(response, ok ? 200 : 401, {
+        ok,
+        ...(ok ? {} : { error: "Acesso administrativo inválido." }),
+      });
+    }
+
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/visualizar_portal.html")) {
       const html = await readFile(path.join(root, "visualizar_portal.html"));
       response.writeHead(200, {
